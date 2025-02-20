@@ -19,8 +19,6 @@ if not ItemGridUI then
         o:setWidth(o:calculateWidth())
         o:setHeight(o:calculateHeight())
 
-        o.selectionManager = SelectionManager:new()
-
         return o
     end
 end
