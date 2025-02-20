@@ -34,6 +34,10 @@ function SelectionManager:updateSelection(gridUi, currentX, currentY)
     -- Clear previous selection
     self.selectedItems = {}
 
+    -- Convert screen coordinates to grid coordinates
+    x1, y1 = ItemGridUiUtil.mousePositionToGridPosition(x1, y1)
+    x2, y2 = ItemGridUiUtil.mousePositionToGridPosition(x2, y2)
+
     -- Find all items within selection rectangle
     for y = y1, y2 do
         for x = x1, x2 do
@@ -140,31 +144,37 @@ function CategorySorter:sortByCategory()
 end
 
 -- Integration with existing UI
-local og_onMouseDown = ItemGridUI.onMouseDown
+if not ItemGridUI.onMouseDown_original then
+    ItemGridUI.onMouseDown_original = ItemGridUI.onMouseDown
+end
+
 function ItemGridUI:onMouseDown(x, y, gridStack)
     if not self.selectionManager then
         self.selectionManager = SelectionManager:new()
     end
 
-    if isShiftButtonDown() then
-        self.selectionManager:startSelection(x, y)
-        return true
-    end
-
-    return og_onMouseDown(self, x, y, gridStack)
+    -- Start selection on mouse down
+    self.selectionManager:startSelection(x, y)
+    return true
 end
 
-local og_onMouseMove = ItemGridUI.onMouseMove
+if not ItemGridUI.onMouseMove_original then
+    ItemGridUI.onMouseMove_original = ItemGridUI.onMouseMove
+end
+
 function ItemGridUI:onMouseMove(dx, dy)
     if self.selectionManager and self.selectionManager.isSelecting then
         self.selectionManager:updateSelection(self, self:getMouseX(), self:getMouseY())
         return true
     end
 
-    return og_onMouseMove(self, dx, dy)
+    return ItemGridUI.onMouseMove_original(self, dx, dy)
 end
 
-local og_onMouseUp = ItemGridUI.onMouseUp
+if not ItemGridUI.onMouseUp_original then
+    ItemGridUI.onMouseUp_original = ItemGridUI.onMouseUp
+end
+
 function ItemGridUI:onMouseUp(x, y, gridStack)
     if self.selectionManager and self.selectionManager.isSelecting then
         local selectedItems = self.selectionManager:endSelection()
@@ -181,12 +191,15 @@ function ItemGridUI:onMouseUp(x, y, gridStack)
         return true
     end
 
-    return og_onMouseUp(self, x, y, gridStack)
+    return ItemGridUI.onMouseUp_original(self, x, y, gridStack)
 end
 
-local og_render = ItemGridUI.render
+if not ItemGridUI.render_original then
+    ItemGridUI.render_original = ItemGridUI.render
+end
+
 function ItemGridUI:render()
-    og_render(self)
+    ItemGridUI.render_original(self)
 
     if self.selectionManager then
         self.selectionManager:renderSelectionBox(self)
@@ -194,15 +207,24 @@ function ItemGridUI:render()
 end
 
 -- Add sort button to container UI
-local og_createChildren = ItemGridContainerUI.createChildren
-function ItemGridContainerUI:createChildren()
-    og_createChildren(self)
+if not ItemGridContainerUI.createChildren_original then
+    ItemGridContainerUI.createChildren_original = ItemGridContainerUI.createChildren
+end
 
-    local sortButton = ISButton:new(self:getWidth() - 25, 0, 20, 20, "S", self, function(target)
+function ItemGridContainerUI:createChildren()
+    ItemGridContainerUI.createChildren_original(self)
+
+    local titleBarHeight = self:titleBarHeight()
+
+    -- Add sort button using same style as collapse button
+    self.sortButton = ISButton:new(self.collapseButton:getRight() + 1, 0, titleBarHeight, titleBarHeight, "⇅", self, function(target)
         local sorter = CategorySorter:new(target.containerGrid)
         sorter:sortByCategory()
     end)
-    sortButton:initialise()
-    sortButton:instantiate()
-    self:addChild(sortButton)
+    self.sortButton:initialise()
+    self.sortButton:instantiate()
+    self.sortButton.borderColor.a = 0.0
+    self.sortButton.backgroundColor.a = 0.0
+    self.sortButton.backgroundColorMouseOver.a = 0.7
+    self:addChild(self.sortButton)
 end
