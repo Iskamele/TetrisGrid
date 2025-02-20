@@ -149,13 +149,18 @@ if not ItemGridUI.onMouseDown_original then
 end
 
 function ItemGridUI:onMouseDown(x, y, gridStack)
+    if not self or not self.grid then return false end
+
     if not self.selectionManager then
         self.selectionManager = SelectionManager:new()
     end
 
     -- Start selection on mouse down
-    self.selectionManager:startSelection(x, y)
-    return true
+    if self.selectionManager then
+        self.selectionManager:startSelection(x, y)
+        return true
+    end
+    return false
 end
 
 if not ItemGridUI.onMouseMove_original then
@@ -163,12 +168,17 @@ if not ItemGridUI.onMouseMove_original then
 end
 
 function ItemGridUI:onMouseMove(dx, dy)
+    if not self or not self.grid then return false end
+
     if self.selectionManager and self.selectionManager.isSelecting then
         self.selectionManager:updateSelection(self, self:getMouseX(), self:getMouseY())
         return true
     end
 
-    return ItemGridUI.onMouseMove_original(self, dx, dy)
+    if ItemGridUI.onMouseMove_original then
+        return ItemGridUI.onMouseMove_original(self, dx, dy)
+    end
+    return false
 end
 
 if not ItemGridUI.onMouseUp_original then
@@ -212,19 +222,29 @@ if not ItemGridContainerUI.createChildren_original then
 end
 
 function ItemGridContainerUI:createChildren()
-    ItemGridContainerUI.createChildren_original(self)
+    if not self then return end
+
+    if ItemGridContainerUI.createChildren_original then
+        ItemGridContainerUI.createChildren_original(self)
+    end
+
+    if not self.collapseButton then return end
 
     local titleBarHeight = self:titleBarHeight()
 
     -- Add sort button using same style as collapse button
-    self.sortButton = ISButton:new(self.collapseButton:getRight() + 1, 0, titleBarHeight, titleBarHeight, "⇅", self, function(target)
-        local sorter = CategorySorter:new(target.containerGrid)
-        sorter:sortByCategory()
+    self.sortButton = ISButton:new(self.collapseButton:getRight() + 1, 0, titleBarHeight, titleBarHeight, "▼", self, function(target)
+        if target and target.containerGrid then
+            local sorter = CategorySorter:new(target.containerGrid)
+            sorter:sortByCategory()
+        end
     end)
-    self.sortButton:initialise()
-    self.sortButton:instantiate()
-    self.sortButton.borderColor.a = 0.0
-    self.sortButton.backgroundColor.a = 0.0
-    self.sortButton.backgroundColorMouseOver.a = 0.7
-    self:addChild(self.sortButton)
+    if self.sortButton then
+        self.sortButton:initialise()
+        self.sortButton:instantiate()
+        self.sortButton.borderColor = {r=1, g=1, b=1, a=0.0}
+        self.sortButton.backgroundColor = {r=1, g=1, b=1, a=0.0}
+        self.sortButton.backgroundColorMouseOver = {r=1, g=1, b=1, a=0.7}
+        self:addChild(self.sortButton)
+    end
 end
