@@ -34,7 +34,7 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum)
     local o = ISPanel:new(0, 0, 0, 0)
     setmetatable(o, self)
     self.__index = self
-
+    
     o.inventory = inventory
     o.inventoryPane = inventoryPane
     o.playerNum = playerNum
@@ -56,7 +56,7 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum)
     if inventory == player:getInventory() then
         o.isPlayerInventory = true
     end
-
+    
     o.isOnPlayer = o.isPlayerInventory or (o.item and o.item:isInPlayerInventory())
     o.showTitle = true
     o.isCollapsed = false
@@ -82,7 +82,7 @@ function ItemGridContainerUI.getWorldTexture(inventory)
     end
 
     local props = sprite:getProperties()
-
+    
     local isMultiSprite = sprite:getSpriteGrid() ~= nil
     if isMultiSprite then
         return nil;
@@ -105,7 +105,7 @@ function ItemGridContainerUI:initialise()
     ISPanel.initialise(self)
 
     self.gridUis = self:createItemGridUIs()
-
+    
     local infoRenderer = GridContainerInfo:new(self)
     infoRenderer:initialise()
 
@@ -119,7 +119,7 @@ function ItemGridContainerUI:initialise()
 
     local overflowRenderer = GridOverflowRenderer:new(0, 0, self)
     overflowRenderer:initialise()
-
+    
     local collapseButton = ISButton:new(0, 0, 16, 16, "V", self, ItemGridContainerUI.onCollapseButtonClick)
     collapseButton:initialise()
     collapseButton.borderColor = {r=1, g=1, b=1, a=0.1}
@@ -221,7 +221,7 @@ function ItemGridContainerUI:updateItemGridPositions(_gridUis, scale)
 
     -- Space out the grids
     local gridSpacing = 6 * scale
-
+    
     local gridUis = {}
     for _, gridUi in ipairs(_gridUis) do
         table.insert(gridUis, gridUi)
@@ -327,7 +327,7 @@ function ItemGridContainerUI:updateItemGridPositions(_gridUis, scale)
     local maxY = 0
 
     local mode = self.containerGrid.containerDefinition.centerMode
-    if mode == "horizontal" or mode == nil then
+    if mode == "horizontal" or mode == nil then 
         -- center on x axis
         local startX = xOffset
         for y, gridUisByX in pairs(gridUisByY) do
@@ -370,7 +370,7 @@ end
 
 function ItemGridContainerUI:prerender()
     local inv = self.inventory
-
+    
     if self.containerGrid:shouldRefresh() or inv:isDrawDirty() then
         self.containerGrid:refresh(self)
         inv:setDrawDirty(false)
@@ -391,7 +391,7 @@ function ItemGridContainerUI:prerender()
         end
 
         collapseX = self:renderTitle(invName, 0, 0, TITLE_Y_PADDING, 1) + 3
-
+        
         self.collapseButton:setVisible(true)
         self.collapseButton:setX(collapseX)
     else
@@ -408,7 +408,7 @@ end
 function ItemGridContainerUI:renderTitle(text, xOffset, yOffset, paddingX, paddingY)
     local textW = getTextManager():MeasureStringX(UIFont.Small, text);
     local textH = getTextManager():getFontHeight(UIFont.Small);
-
+    
     self:drawRect(xOffset, yOffset, textW+paddingX*2, textH+paddingY*2, 0.9,0,0,0)
     self:drawRectBorder(xOffset, yOffset, textW+paddingX*2, textH+paddingY*2, 0.5,1,1,1)
     self:drawText(text, xOffset+paddingX, yOffset+paddingY, 1, 1, 1, 1, UIFont.Small);
@@ -434,7 +434,7 @@ function ItemGridContainerUI:onMouseDoubleClick(x, y)
         self.infoRenderer:onMouseDoubleClick(self.infoRenderer:getMouseX(), self.infoRenderer:getMouseY())
         return
     end
-
+    
     local gridUi = ItemGridUiUtil.findGridUiUnderMouse(self.gridUis, x, y)
     if gridUi then
         gridUi:onMouseDoubleClick(gridUi:getMouseX(), gridUi:getMouseY())
